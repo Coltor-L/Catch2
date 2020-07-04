@@ -50,7 +50,7 @@ namespace Catch {
                     currentTracker.addChild( tracker );
                 }
 
-                if( !ctx.completedCycle() && !tracker->isComplete() ) {
+                if( /*!ctx.completedCycle() &&*/ !tracker->isComplete() ) {
                     tracker->open();
                 }
 
@@ -64,8 +64,18 @@ namespace Catch {
             }
             void close() override {
                 TrackerBase::close();
-                // Generator interface only finds out if it has another item on atual move
+                // We want to avoid using up the first value if children haven't yet started executing.
+                if (!m_children.empty()
+                    && std::find_if(m_children.begin(), m_children.end(),
+                                    [](TestCaseTracking::ITrackerPtr tracker) { return tracker->hasStarted(); }) == m_children.end()) {
+                    // TODO: What here?
+                    // We need to avoid m_generator->next(), but otherwise this is probably an okay state
+                    m_children.clear();
+                    m_runState = Executing;
+                } else
+
                 if (m_runState == CompletedSuccessfully && m_generator->next()) {
+                    // Generator interface only finds out if it has another item on atual move
                     m_children.clear();
                     m_runState = Executing;
                 }
@@ -206,7 +216,7 @@ namespace Catch {
         using namespace Generators;
         GeneratorTracker& tracker = GeneratorTracker::acquire(m_trackerContext,
                                                               TestCaseTracking::NameAndLocation( static_cast<std::string>(generatorName), lineInfo ) );
-        assert( tracker.isOpen() );
+        //assert( tracker.isOpen() );
         m_lastAssertionInfo.lineInfo = lineInfo;
         return tracker;
     }

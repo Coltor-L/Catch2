@@ -267,6 +267,81 @@ TEST_CASE("#1913 - GENERATEs can share a line", "[regression][generators]") {
     REQUIRE(i != j);
 }
 
+TEST_CASE("#1938 - GENERATE after a section", "[regression][generators]") {
+    SECTION("A") {
+        SUCCEED("A");
+    }
+    auto m = GENERATE(1, 2, 3);
+    SECTION("B") {
+        REQUIRE(m);
+    }
+}
+
+TEST_CASE("#1938 - flat generate") {
+    auto m = GENERATE(1, 2, 3);
+    REQUIRE(m);
+}
+
+TEST_CASE("#1938 - nested generate") {
+    auto m = GENERATE(1, 2, 3);
+    auto n = GENERATE(1, 2, 3);
+    REQUIRE(m);
+    REQUIRE(n);
+}
+
+TEST_CASE("#1938 - mixed sections and generates") {
+    auto i = GENERATE(1, 2);
+    SECTION("A") {
+        SUCCEED("A");
+    }
+    auto j = GENERATE(3, 4);
+    SECTION("B") {
+        SUCCEED("B");
+    }
+    auto k = GENERATE(5, 6);
+    CAPTURE(i, j, k);
+    SUCCEED();
+}
+
+TEST_CASE("#1938 - Section followed by flat generate") {
+    SECTION("A") {
+        REQUIRE(1);
+    }
+    auto m = GENERATE(2, 3);
+    REQUIRE(m);
+}
+
+TEST_CASE("#1938 - Plain test case") {
+    SUCCEED();
+}
+
+TEST_CASE("#1938 - Test case with a section") {
+    SECTION("Section 1") {
+    }
+}
+
+TEST_CASE("#1938 - Test case with two sections") {
+    SECTION("Section 1") {
+
+    }
+    SECTION("Section 2") {
+
+    }
+}
+
+
+/*
+ * Check and test:
+ * TEST_CASE only
+ * TEST_CASE + 1 section
+ * TEST_CASE + 2 sections
+ * TEST_CASE + GENERATE + SECTION(s)
+ * TEST_CASE + SECTION + GENERATE
+ * TEST_CASE + SECTION + 2 SECTIONS
+ * TEST_CAES + SECTION + GENERATE + SECTION
+ */
+
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
